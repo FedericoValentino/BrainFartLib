@@ -4,9 +4,9 @@
 
 int main()
 {
-    BrainFart* brain = new BrainFart({2, 3, 3, 2});
+    BrainFart* brain = new BrainFart({9, 7, 7, 7, 9});
 
-
+    brain->feedForward({1, 1, 1, 1, 1, 1, 1, 1, 1});
 
     return 0;
 }
