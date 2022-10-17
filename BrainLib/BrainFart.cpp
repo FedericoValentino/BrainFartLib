@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cstdio>
+#include <random>
 #include "BrainFart.h"
 #include "../MatrixLib/MatrixLib.h"
 
@@ -34,7 +35,9 @@ BrainFart::BrainFart(std::vector<int> layerSizes)
 
 void BrainFart::initializeWeights()
 {
-    srand(time(nullptr));
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> dist(-10.0, 10.0);
     for(int i = 0; i < dimensions.size() - 1; i++)
     {
         int r = dimensions[i];
@@ -43,7 +46,8 @@ void BrainFart::initializeWeights()
         {
             for(int k = 0; k < c; k++)
             {
-                weights[i][j][k] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                weights[i][j][k] = dist(mt);
+
             }
         }
         //print(weights[i], r, c);
@@ -66,8 +70,10 @@ float *BrainFart::feedForward(std::vector<float> input)
         layers[0][0][i] = input[i];
     }
 
+    /*
     printf("You are feeding the network: \n");
     print(layers[0], 1, dimensions[0]);
+     */
 
     for(int i = 1; i < dimensions.size(); i++)
     {
@@ -79,8 +85,12 @@ float *BrainFart::feedForward(std::vector<float> input)
         }
     }
 
+    /*
     printf("Network Output is: \n");
     print(layers[dimensions.size()-1], 1, dimensions[dimensions.size()-1]);
+     */
+
+    return layers[dimensions.size()-1][0];
 }
 
 
