@@ -22,11 +22,16 @@ float** multiply(int r1, int c1, int r2, int c2, float** m1, float** m2)
         return nullptr;
     }
 
-    float** multiplication = new float*[r1];
-    for(int i = 0; i < r2; i++)
+
+
+    auto** multiplication = new float*[r1];
+
+    for(int i = 0; i < r1; i++)
     {
         multiplication[i] = new float[c2];
     }
+
+
 
     for(int r = 0; r < r1; r++)
     {
@@ -42,4 +47,24 @@ float** multiply(int r1, int c1, int r2, int c2, float** m1, float** m2)
     return multiplication;
 }
 
+void transpose(float** m1, int r, int c)
+{
+    float temp[r][c];
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            temp[r][c] = m1[r][c];
+        }
+    }
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            m1[r][c] = temp[c][r];
+        }
+    }
+}
 

@@ -7,7 +7,7 @@ class BrainFart{
 public:
     BrainFart(std::vector<int> layerSizes);
 
-    int* feedForward(std::vector<float> input);
+    float* feedForward(std::vector<float> input);
 
     void backwardPropagation(std::vector<float> input);
 

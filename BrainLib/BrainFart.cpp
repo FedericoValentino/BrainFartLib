@@ -43,14 +43,14 @@ void BrainFart::initializeWeights()
         {
             for(int k = 0; k < c; k++)
             {
-                weights[i][j][k] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);;
+                weights[i][j][k] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             }
         }
-        print(weights[i], r, c);
+        //print(weights[i], r, c);
     }
 }
 
-int *BrainFart::feedForward(std::vector<float> input)
+float *BrainFart::feedForward(std::vector<float> input)
 {
     if(input.size() != dimensions[0])
     {
@@ -72,6 +72,11 @@ int *BrainFart::feedForward(std::vector<float> input)
     for(int i = 1; i < dimensions.size(); i++)
     {
         layers[i] = multiply(1, dimensions[i-1], dimensions[i-1], dimensions[i], layers[i-1], weights[i-1]);
+
+        for(int j = 0; j < dimensions[i]; j++)
+        {
+            layers[i][0][j] = reLU(layers[i][0][j]);
+        }
     }
 
     printf("Network Output is: \n");
