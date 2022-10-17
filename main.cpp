@@ -4,9 +4,11 @@
 
 int main()
 {
-    auto* brain = new BrainFart({9, 7, 7, 7, 9});
+    BrainFart* brain1 = new BrainFart({9, 7, 7, 7, 9});
+    BrainFart* brain2 = new BrainFart({9, 7, 7, 7, 9});
 
-    brain->feedForward({1, 1, 1, 1, 1, 1, 1, 1, 1});
+    brain1->feedForward({1, 0, -1, 1, -1, 0, 0, 0, 0});
 
+    BrainFart* son = BrainFart::reproduce(brain1, brain2);
     return 0;
 }

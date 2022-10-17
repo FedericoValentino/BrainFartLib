@@ -11,6 +11,12 @@ public:
 
     void backwardPropagation(std::vector<float> input);
 
+    void mutate();
+
+    static BrainFart* reproduce(BrainFart* father, BrainFart* mother);
+
+    float* getWeights();
+
 private:
     float reLU(float x);
 

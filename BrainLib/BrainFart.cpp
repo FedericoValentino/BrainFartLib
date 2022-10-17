@@ -79,16 +79,20 @@ float *BrainFart::feedForward(std::vector<float> input)
     {
         layers[i] = multiply(1, dimensions[i-1], dimensions[i-1], dimensions[i], layers[i-1], weights[i-1]);
 
+        float sum = 0;
         for(int j = 0; j < dimensions[i]; j++)
         {
-            layers[i][0][j] = reLU(layers[i][0][j]);
+            sum += layers[i][0][j];
+        }
+
+        for(int j = 0; j < dimensions[i]; j++)
+        {
+            layers[i][0][j] = reLU(layers[i][0][j]) / sum;
         }
     }
 
-    /*
     printf("Network Output is: \n");
     print(layers[dimensions.size()-1], 1, dimensions[dimensions.size()-1]);
-     */
 
     return layers[dimensions.size()-1][0];
 }
@@ -97,6 +101,58 @@ float *BrainFart::feedForward(std::vector<float> input)
 
 void BrainFart::backwardPropagation(std::vector<float> input) {
 
+}
+
+void BrainFart::mutate()
+{
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+
+    for(int i = 0; i < dimensions.size()-1; i++)
+    {
+        float** matrix = weights[i];
+        for(int j = 0; j < dimensions[i]; j++)
+        {
+            for(int k = 0; k < dimensions[i+1]; k++)
+            {
+                std::normal_distribution<> d{matrix[j][k],2};
+                matrix[j][k] = d(gen);
+            }
+        }
+    }
+
+}
+
+BrainFart *BrainFart::reproduce(BrainFart *father, BrainFart *mother) {
+    BrainFart* son = new BrainFart(father->dimensions);
+
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+
+    std::uniform_real_distribution<> d{0.0, 1.0};
+
+    for(int i = 0; i < father->dimensions.size()-1; i++)
+    {
+        float** fatherMatrix = father->weights[i];
+        float** motherMatrix = mother->weights[i];
+        float** sonMatrix = son->weights[i];
+
+        for(int j = 0; j < father->dimensions[i]; j++)
+        {
+            for(int k = 0; k < father->dimensions[i+1]; k++)
+            {
+                if(d(gen) > 0.5)
+                {
+                    sonMatrix[j][k] = fatherMatrix[j][k];
+                }
+                else
+                {
+                    sonMatrix[j][k] = motherMatrix[j][k];
+                }
+            }
+        }
+    }
+    return son;
 }
 
 
