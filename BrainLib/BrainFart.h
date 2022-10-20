@@ -13,12 +13,18 @@ public:
 
     void mutate();
 
+    void freeBrain();
+
+    void freeLayers();
+
     static BrainFart* reproduce(BrainFart* father, BrainFart* mother);
 
-    float* getWeights();
+    static BrainFart* cloneBrain(BrainFart* copy);
 
 private:
     float reLU(float x);
+
+    float sig(float x);
 
     std::vector<int> dimensions;
 

@@ -9,6 +9,6 @@ int main()
 
     brain1->feedForward({1, 0, -1, 1, -1, 0, 0, 0, 0});
 
-    BrainFart* son = BrainFart::reproduce(brain1, brain2);
+    brain1->freeBrain();
     return 0;
 }
