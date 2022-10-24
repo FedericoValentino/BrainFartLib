@@ -1,5 +1,3 @@
-#include<cstdio>
-#include <vector>
 #include "MatrixLib.h"
 
 void MatrixMath::print(float** matrix, int r, int c)
@@ -49,25 +47,23 @@ float** MatrixMath::multiply(int r1, int c1, int r2, int c2, float** m1, float**
     return multiplication;
 }
 
-void MatrixMath::transpose(float** m1, int r, int c)
+float** MatrixMath::transpose(float** m1, int r, int c)
 {
-    float temp[r][c];
-
-    for(int i = 0; i < r; i++)
+    float** transpose = new float*[c];
+    for(int i = 0; i < c; i++)
     {
-        for(int j = 0; j < c; j++)
+        transpose[i] = new float[r];
+    }
+
+    for(int i = 0; i < c; i++)
+    {
+        for(int j = 0; j < r; j++)
         {
-            temp[r][c] = m1[r][c];
+            transpose[i][j] = m1[j][i];
         }
     }
 
-    for(int i = 0; i < r; i++)
-    {
-        for(int j = 0; j < c; j++)
-        {
-            m1[r][c] = temp[c][r];
-        }
-    }
+    return transpose;
 }
 
 float **MatrixMath::subtract(int r1, int c1, float **m1, float **m2) {
@@ -104,5 +100,28 @@ float **MatrixMath::toMatrix(int r, int c, std::vector<float> input) {
     }
 
     return toMatrix;
+}
+
+void MatrixMath::Hadamard(int r, int c, float **m1, float **m2)
+{
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            m1[i][j] = m1[i][j] * (m2[i][j] * (1 - m2[i][j]));
+        }
+    }
+}
+
+void MatrixMath::sum(int r, int c, float **m1, float **m2)
+{
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            m1[i][j] = m1[i][j] + m2[i][j];
+        }
+    }
+
 }
 

@@ -119,7 +119,6 @@ float *BrainFart::feedForward(std::vector<float> input)
         returnValue[i] = layers[dimensions.size()-1][0][i];
     }
 
-
     return returnValue;
 }
 
@@ -132,11 +131,38 @@ void BrainFart::freeLayers()
     }
 }
 
-void BrainFart::backwardPropagation(std::vector<float> input)
+void BrainFart::backwardPropagation(std::vector<float> actual, std::vector<float> guess)
 {
-    float** inputMatrix = MatrixMath::toMatrix(1, input.size(), input);
+    /*
+     * Errors[0] are the errors on the output side, errors[dimensions.size()-2] are the errors on the first hidden layer
+     * deltaWeights[0] are the change in weights on the last set of weights, deltaWeights[dimensions.size()-1] are the change in weights on the first set
+     */
 
+    float*** errors = new float**[dimensions.size() - 1];
+    float*** deltaWeights = new float**[dimensions.size() - 1];
 
+    float** actualMatrix = MatrixMath::toMatrix(1, actual.size(), actual);
+    float** guessMatrix = MatrixMath::toMatrix(1, guess.size(), guess);
+
+    errors[0] = MatrixMath::subtract(1, guess.size(), actualMatrix, guessMatrix);
+
+    for(int i = 1; i < dimensions.size() - 1; i++)
+    {
+        float** weightT = MatrixMath::transpose(weights[dimensions.size()-1-i], dimensions[dimensions.size()-1-i], dimensions[dimensions.size()-i]);
+        errors[i] = MatrixMath::multiply(1, dimensions[dimensions.size()-i], dimensions[dimensions.size()-i], dimensions[dimensions.size()-1-i], errors[i-1], weightT);
+    }
+
+    for(int i = 0; i < dimensions.size() - 1; i++)
+    {
+        MatrixMath::Hadamard(1, dimensions[dimensions.size()-1-i], errors[i], layers[dimensions.size()-1-i]);
+        float** errorT = MatrixMath::transpose(errors[i], 1, dimensions[dimensions.size()-1-i]);
+        deltaWeights[i] = MatrixMath::multiply( dimensions[dimensions.size()-1-i], 1, 1, dimensions[dimensions.size()-2-i], errorT, layers[dimensions.size()-2-i]);
+    }
+
+    for(int i = 0; i < dimensions.size()-2; i++)
+    {
+        MatrixMath::sum(dimensions[i], dimensions[i+1], weights[i], deltaWeights[dimensions.size()-2-i]);
+    }
 }
 
 void BrainFart::mutate()
