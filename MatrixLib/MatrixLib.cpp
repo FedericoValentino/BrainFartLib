@@ -108,7 +108,7 @@ void MatrixMath::Hadamard(int r, int c, float **m1, float **m2)
     {
         for(int j = 0; j < c; j++)
         {
-            m1[i][j] = m1[i][j] * (m2[i][j] * (1 - m2[i][j]));
+            m1[i][j] = m1[i][j] * m2[i][j] * 0.5;
         }
     }
 }
@@ -122,6 +122,33 @@ void MatrixMath::sum(int r, int c, float **m1, float **m2)
             m1[i][j] = m1[i][j] + m2[i][j];
         }
     }
+}
 
+void MatrixMath::freeMatrix(int r, int c, float **m1)
+{
+    for(int i = 0; i < r; i++)
+    {
+        delete m1[i];
+    }
+    delete m1;
+}
+
+float **MatrixMath::dsigmoid(int r, int c, float **m1) {
+
+    float** dsig = new float*[r];
+    for(int i = 0; i < r; i++)
+    {
+        dsig[i] = new float[c];
+    }
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            dsig[i][j] = m1[i][j] * (1 - m1[i][j]);
+        }
+    }
+
+    return dsig;
 }
 

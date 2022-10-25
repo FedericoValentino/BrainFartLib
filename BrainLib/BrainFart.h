@@ -21,6 +21,8 @@ public:
 
     static BrainFart* cloneBrain(BrainFart* copy);
 
+    int layerNumber;
+
 private:
     float reLU(float x);
 

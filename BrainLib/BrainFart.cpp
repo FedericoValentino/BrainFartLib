@@ -21,6 +21,8 @@ BrainFart::BrainFart(std::vector<int> layerSizes)
 {
     dimensions = layerSizes;
 
+    layerNumber = dimensions.size();
+
     layers = new float**[layerSizes.size()];
 
     weights = new float ** [layerSizes.size()-1];
@@ -42,7 +44,7 @@ void BrainFart::initializeWeights()
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<double> dist(-10.0, 10.0);
-    for(int i = 0; i < dimensions.size() - 1; i++)
+    for(int i = 0; i < layerNumber - 1; i++)
     {
         int r = dimensions[i];
         int c = dimensions[i+1];
@@ -74,28 +76,16 @@ float *BrainFart::feedForward(std::vector<float> input)
         layers[0][0][i] = input[i];
     }
 
-    /*
-    printf("You are feeding the network: \n");
-    print(layers[0], 1, dimensions[0]);
-     */
-
-    for(int i = 1; i < dimensions.size(); i++)
+    for(int i = 1; i < layerNumber; i++)
     {
         layers[i] = MatrixMath::multiply(1, dimensions[i-1], dimensions[i-1], dimensions[i], layers[i-1], weights[i-1]);
 
-        /*
-        float sum = 0;
-        for(int j = 0; j < dimensions[i]; j++)
-        {
-            sum += layers[i][0][j];
-        }
-        */
 
-        if(i != dimensions.size()-1)
+        if(i != layerNumber-1)
         {
             for(int j = 0; j < dimensions[i]; j++)
             {
-                layers[i][0][j] = reLU(layers[i][0][j]);
+                layers[i][0][j] = sig(layers[i][0][j]);
             }
         }
         else
@@ -107,16 +97,11 @@ float *BrainFart::feedForward(std::vector<float> input)
         }
     }
 
-    /*
-    printf("Network Output is: \n");
-    print(layers[dimensions.size()-1], 1, dimensions[dimensions.size()-1]);
-     */
+    float* returnValue = new float[dimensions[layerNumber-1]];
 
-    float* returnValue = new float[dimensions[dimensions.size()-1]];
-
-    for(int i = 0; i < dimensions[dimensions.size()-1]; i++)
+    for(int i = 0; i < dimensions[layerNumber-1]; i++)
     {
-        returnValue[i] = layers[dimensions.size()-1][0][i];
+        returnValue[i] = layers[layerNumber-1][0][i];
     }
 
     return returnValue;
@@ -124,7 +109,7 @@ float *BrainFart::feedForward(std::vector<float> input)
 
 void BrainFart::freeLayers()
 {
-    for(int i = 0; i < dimensions.size(); i++)
+    for(int i = 0; i < layerNumber; i++)
     {
         delete layers[i][0];
         delete layers[i];
@@ -133,35 +118,47 @@ void BrainFart::freeLayers()
 
 void BrainFart::backwardPropagation(std::vector<float> actual, std::vector<float> guess)
 {
-    /*
-     * Errors[0] are the errors on the output side, errors[dimensions.size()-2] are the errors on the first hidden layer
-     * deltaWeights[0] are the change in weights on the last set of weights, deltaWeights[dimensions.size()-1] are the change in weights on the first set
-     */
 
-    float*** errors = new float**[dimensions.size() - 1];
-    float*** deltaWeights = new float**[dimensions.size() - 1];
+    int dimension = layerNumber - 1;
+
+    float*** errors = new float**[dimension];
+    float*** deltaWeights = new float**[dimension];
 
     float** actualMatrix = MatrixMath::toMatrix(1, actual.size(), actual);
     float** guessMatrix = MatrixMath::toMatrix(1, guess.size(), guess);
 
-    errors[0] = MatrixMath::subtract(1, guess.size(), actualMatrix, guessMatrix);
-
-    for(int i = 1; i < dimensions.size() - 1; i++)
+    //Errors per layer
+    for(int i = dimension-1; i >= 0; i--)
     {
-        float** weightT = MatrixMath::transpose(weights[dimensions.size()-1-i], dimensions[dimensions.size()-1-i], dimensions[dimensions.size()-i]);
-        errors[i] = MatrixMath::multiply(1, dimensions[dimensions.size()-i], dimensions[dimensions.size()-i], dimensions[dimensions.size()-1-i], errors[i-1], weightT);
+        if(i == dimension - 1)
+        {
+            errors[i] = MatrixMath::subtract(1, guess.size(), actualMatrix, guessMatrix);
+        }
+        else
+        {
+            float** weightT = MatrixMath::transpose(weights[i+1], dimensions[i+1], dimensions[i+2]);
+            errors[i] = MatrixMath::multiply(1, dimensions[i+2], dimensions[i+2], dimensions[i+1], errors[i+1], weightT);
+        }
     }
 
-    for(int i = 0; i < dimensions.size() - 1; i++)
+    //Gradient and Weight
+    for(int i = 0; i < dimension; i++)
     {
-        MatrixMath::Hadamard(1, dimensions[dimensions.size()-1-i], errors[i], layers[dimensions.size()-1-i]);
-        float** errorT = MatrixMath::transpose(errors[i], 1, dimensions[dimensions.size()-1-i]);
-        deltaWeights[i] = MatrixMath::multiply( dimensions[dimensions.size()-1-i], 1, 1, dimensions[dimensions.size()-2-i], errorT, layers[dimensions.size()-2-i]);
+        float** gradient = MatrixMath::dsigmoid(1, dimensions[i+1], layers[i+1]);
+        MatrixMath::Hadamard(1, dimensions[i+1], gradient, errors[i]);
+        float** gradientT = MatrixMath::transpose(gradient, 1, dimensions[i+1]);
+        deltaWeights[i] = MatrixMath::multiply(dimensions[i+1], 1, 1, dimensions[i], gradientT, layers[i]);
+        deltaWeights[i] = MatrixMath::transpose(deltaWeights[i], dimensions[i+1], dimensions[i]);
+        //MatrixMath::print(deltaWeights[i], dimensions[i], dimensions[i+1]);
     }
 
-    for(int i = 0; i < dimensions.size()-2; i++)
+
+    for(int i = 0; i < dimension; i++)
     {
-        MatrixMath::sum(dimensions[i], dimensions[i+1], weights[i], deltaWeights[dimensions.size()-2-i]);
+        MatrixMath::sum(dimensions[i], dimensions[i+1], weights[i], deltaWeights[i]);
+
+        MatrixMath::print(deltaWeights[i], dimensions[i], dimensions[i+1]);
+        MatrixMath::print(weights[i], dimensions[i], dimensions[i+1]);
     }
 }
 
@@ -171,7 +168,7 @@ void BrainFart::mutate()
     std::mt19937 gen{rd()};
     std::uniform_real_distribution<> u{0.0, 1.0};
 
-    for(int i = 0; i < dimensions.size()-1; i++)
+    for(int i = 0; i < layerNumber-1; i++)
     {
         float** matrix = weights[i];
         for(int j = 0; j < dimensions[i]; j++)
@@ -196,7 +193,7 @@ BrainFart *BrainFart::reproduce(BrainFart *father, BrainFart *mother) {
 
     std::uniform_real_distribution<> d{0.0, 1.0};
 
-    for(int i = 0; i < father->dimensions.size()-1; i++)
+    for(int i = 0; i < father->layerNumber-1; i++)
     {
         float** fatherMatrix = father->weights[i];
         float** motherMatrix = mother->weights[i];
@@ -224,7 +221,7 @@ void BrainFart::freeBrain()
 {
     delete layers;
 
-    for(int i = 0; i < dimensions.size()-1; i++)
+    for(int i = 0; i < layerNumber-1; i++)
     {
         for(int j = 0; j < dimensions[i]; j++)
         {
@@ -239,7 +236,7 @@ BrainFart *BrainFart::cloneBrain(BrainFart *copy) {
     BrainFart* son = new BrainFart(copy->dimensions);
 
 
-    for(int i = 0; i < copy->dimensions.size()-1; i++)
+    for(int i = 0; i < copy->layerNumber-1; i++)
     {
         float** fatherMatrix = copy->weights[i];
         float** sonMatrix = son->weights[i];
