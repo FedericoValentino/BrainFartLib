@@ -106,7 +106,7 @@ void MatrixMath::Hadamard(int r, int c, float **m1, float **m2)
     {
         for(int j = 0; j < c; j++)
         {
-            m1[i][j] = m1[i][j] * m2[i][j] * 0.004;
+            m1[i][j] = m1[i][j] * m2[i][j] * 0.5;
         }
     }
 }
@@ -131,7 +131,8 @@ void MatrixMath::freeMatrix(int r, int c, float **m1)
     delete m1;
 }
 
-float **MatrixMath::dsigmoid(int r, int c, float **m1) {
+float **MatrixMath::dsigmoid(int r, int c, float **m1)
+{
 
     float** dsig = new float*[r];
     for(int i = 0; i < r; i++)
@@ -148,5 +149,43 @@ float **MatrixMath::dsigmoid(int r, int c, float **m1) {
     }
 
     return dsig;
+}
+
+float **MatrixMath::copyMatrix(int r, int c, float **from)
+{
+
+    float** copy = new float*[r];
+    for(int i = 0; i < r; i++)
+    {
+        copy[i] = new float[c];
+    }
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            copy[i][j] = from[i][j];
+        }
+    }
+
+    return copy;
+}
+
+float **MatrixMath::unitaryMatrix(int r, int c) {
+    float** copy = new float*[r];
+    for(int i = 0; i < r; i++)
+    {
+        copy[i] = new float[c];
+    }
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            copy[i][j] = 1;
+        }
+    }
+
+    return copy;
 }
 

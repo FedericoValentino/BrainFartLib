@@ -21,6 +21,8 @@ public:
 
     static float** dsigmoid(int r, int c, float** m1);
 
+    static float** copyMatrix(int r, int c, float** from);
 
+    static float** unitaryMatrix(int r, int c);
 };
 

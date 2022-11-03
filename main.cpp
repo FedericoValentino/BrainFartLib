@@ -16,24 +16,52 @@ void printArr(float* arr, int size)
 int main()
 {
     srand(time(NULL));
-    BrainFart* brain1 = new BrainFart({1, 3, 3, 1});
+    BrainFart* brain1 = new BrainFart({2, 3, 1});
 
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < 100000; i++)
     {
-        int input = rand()%50;
-        printf("guessing %d squared\n", input);
-        float *output = brain1->feedForward({float(input)});
-
-        printArr(output, 1);
-
-        std::vector<float> guess;
-        for(int j = 0; j < 1; j++)
+        int caso = rand()%4;
+        std::vector<float> trainingData;
+        std::vector<float> answer;
+        switch(caso)
         {
-            guess.push_back(output[j]);
+            case 0:
+                trainingData = {1, 1};
+                answer = {0};
+                break;
+            case 1:
+                trainingData = {0, 1};
+                answer = {1};
+                break;
+            case 2:
+                trainingData = {1, 0};
+                answer = {1};
+                break;
+            case 3:
+                trainingData = {0, 0};
+                answer = {0};
+                break;
         }
 
-        brain1->backwardPropagation({float(input*input)}, guess);
+        float* output = brain1->feedForward(trainingData);
+
+        std::vector<float> guess;
+
+        guess.push_back(output[0]);
+
+        brain1->backwardPropagation(answer, guess);
+
+        brain1->freeLayers();
     }
+
+
+    printArr(brain1->feedForward({1, 1}), 1);
+    printArr(brain1->feedForward({1, 0}), 1);
+    printArr(brain1->feedForward({0, 1}), 1);
+    printArr(brain1->feedForward({0, 0}), 1);
+
+
+
 
     brain1->freeLayers();
 

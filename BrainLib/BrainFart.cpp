@@ -25,6 +25,8 @@ BrainFart::BrainFart(std::vector<int> layerSizes)
 
     layers = new float**[layerSizes.size()];
 
+    biases = new float**[layerSizes.size()];
+
     weights = new float ** [layerSizes.size()-1];
 
     for(int i = 0; i < layerSizes.size()-1; i++)
@@ -36,10 +38,10 @@ BrainFart::BrainFart(std::vector<int> layerSizes)
         }
     }
 
-    initializeWeights();
+    initializeWeightsAndBiases();
 }
 
-void BrainFart::initializeWeights()
+void BrainFart::initializeWeightsAndBiases()
 {
     std::random_device rd;
     std::mt19937 mt(rd());
@@ -53,11 +55,20 @@ void BrainFart::initializeWeights()
             for(int k = 0; k < c; k++)
             {
                 weights[i][j][k] = dist(mt);
-
             }
         }
-        MatrixMath::print(weights[i], r, c);
     }
+
+    for(int i = 0; i < layerNumber; i++)
+    {
+        biases[i] = new float*[dimensions[i]];
+        for(int j = 0; j < dimensions[i]; j++)
+        {
+            biases[i][j] = new float[1];
+            biases[i][j][0] = dist(mt);
+        }
+    }
+
 }
 
 float *BrainFart::feedForward(std::vector<float> input)
@@ -80,6 +91,8 @@ float *BrainFart::feedForward(std::vector<float> input)
     {
         layers[i] = MatrixMath::multiply(dimensions[i], dimensions[i-1], dimensions[i-1], 1, weights[i-1], layers[i-1]);
 
+        MatrixMath::sum(dimensions[i], 1, layers[i], biases[i]);
+
 
         //Hidden Layers
         if(i != layerNumber-1)
@@ -94,7 +107,7 @@ float *BrainFart::feedForward(std::vector<float> input)
         {
             for(int j = 0; j < dimensions[i]; j++)
             {
-                layers[i][j][0] = reLU(layers[i][j][0]);
+                layers[i][j][0] = sig(layers[i][j][0]);
             }
         }
     }
@@ -152,6 +165,18 @@ void BrainFart::backwardPropagation(const std::vector<float>& actual, const std:
     for(int i = 0; i < dimension; i++)
     {
         float** gradient = MatrixMath::dsigmoid(dimensions[i+1], 1, layers[i+1]);
+        /*
+        if(i == dimension - 1)
+        {
+            gradient = MatrixMath::unitaryMatrix(dimensions[i+1], 1);
+        }
+        else
+        {
+            gradient = MatrixMath::dsigmoid(dimensions[i+1], 1, layers[i+1]);
+        }
+         */
+
+
         MatrixMath::Hadamard(dimensions[i+1], 1, gradient, errors[i]);
 
         float** layerT = MatrixMath::transpose(layers[i], dimensions[i], 1);
@@ -167,8 +192,12 @@ void BrainFart::backwardPropagation(const std::vector<float>& actual, const std:
     for(int i = 0; i < dimension; i++)
     {
         MatrixMath::sum(dimensions[i+1], dimensions[i], weights[i], deltaWeights[i]);
+        MatrixMath::Hadamard(dimensions[i+1], 1, errors[i], MatrixMath::unitaryMatrix(dimensions[i+1], 1));
+        MatrixMath::sum(dimensions[i+1], 1, biases[i+1], errors[i]);
         MatrixMath::freeMatrix(dimensions[i+1], dimensions[i], deltaWeights[i]);
     }
+
+    //printBrain();
 }
 
 void BrainFart::mutate()
@@ -259,6 +288,15 @@ BrainFart *BrainFart::cloneBrain(BrainFart *copy) {
         }
     }
     return son;
+}
+
+void BrainFart::printBrain()
+{
+    printf("Current Brain Weights\n");
+    for(int i = 0; i < layerNumber-1; i++)
+    {
+        MatrixMath::print(weights[i], dimensions[i+1], dimensions[i]);
+    }
 }
 
 

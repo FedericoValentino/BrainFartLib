@@ -11,6 +11,8 @@ public:
 
     void backwardPropagation(const std::vector<float>& actual, const std::vector<float>& guess);
 
+    void printBrain();
+
     void mutate();
 
     void freeBrain();
@@ -32,9 +34,11 @@ private:
 
     float*** layers;
 
+    float*** biases;
+
     float*** weights;
 
-    void initializeWeights();
+    void initializeWeightsAndBiases();
 };
 
 
