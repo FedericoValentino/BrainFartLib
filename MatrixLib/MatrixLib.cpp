@@ -40,6 +40,7 @@ float** MatrixMath::multiply(int r1, int c1, int r2, int c2, float** m1, float**
             multiplication[r][c] = 0;
             for(int k = 0; k < c1; k++)
             {
+                //printf("%f, %f\n", m1[r][k], m2[k][c]);
                 multiplication[r][c] += m1[r][k] * m2[k][c];
             }
         }
@@ -68,7 +69,7 @@ float** MatrixMath::transpose(float** m1, int r, int c)
 
 float **MatrixMath::subtract(int r1, int c1, float **m1, float **m2) {
     float** returnMatrix = new float*[r1];
-    for(int i = 0; i < c1; i++)
+    for(int i = 0; i < r1; i++)
     {
         returnMatrix[i] = new float[c1];
     }
@@ -91,12 +92,9 @@ float **MatrixMath::toMatrix(int r, int c, std::vector<float> input) {
         toMatrix[i] = new float[c];
     }
 
-    for(int i = 0; i < r; i++)
+    for(int i = 0; i < input.size(); i++)
     {
-        for(int j = 0; j < c; j++)
-        {
-            toMatrix[i][j] = input[i*r + j];
-        }
+        toMatrix[i/c][i%c] = input[i];
     }
 
     return toMatrix;
@@ -108,7 +106,7 @@ void MatrixMath::Hadamard(int r, int c, float **m1, float **m2)
     {
         for(int j = 0; j < c; j++)
         {
-            m1[i][j] = m1[i][j] * m2[i][j] * 0.5;
+            m1[i][j] = m1[i][j] * m2[i][j] * 0.004;
         }
     }
 }

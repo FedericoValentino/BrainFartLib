@@ -9,7 +9,7 @@ public:
 
     float* feedForward(std::vector<float> input);
 
-    void backwardPropagation(std::vector<float> input, std::vector<float> guess);
+    void backwardPropagation(const std::vector<float>& actual, const std::vector<float>& guess);
 
     void mutate();
 

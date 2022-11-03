@@ -29,10 +29,10 @@ BrainFart::BrainFart(std::vector<int> layerSizes)
 
     for(int i = 0; i < layerSizes.size()-1; i++)
     {
-        weights[i] = new float * [layerSizes[i]];
-        for(int j = 0; j < layerSizes[i]; j++)
+        weights[i] = new float * [layerSizes[i+1]];
+        for(int j = 0; j < layerSizes[i+1]; j++)
         {
-            weights[i][j] = new float[layerSizes[i+1]];
+            weights[i][j] = new float[layerSizes[i]];
         }
     }
 
@@ -43,11 +43,11 @@ void BrainFart::initializeWeights()
 {
     std::random_device rd;
     std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(-10.0, 10.0);
+    std::uniform_real_distribution<double> dist(-1.0, 1.0);
     for(int i = 0; i < layerNumber - 1; i++)
     {
-        int r = dimensions[i];
-        int c = dimensions[i+1];
+        int r = dimensions[i+1];
+        int c = dimensions[i];
         for(int j = 0; j < r; j++)
         {
             for(int k = 0; k < c; k++)
@@ -56,7 +56,7 @@ void BrainFart::initializeWeights()
 
             }
         }
-        //print(weights[i], r, c);
+        MatrixMath::print(weights[i], r, c);
     }
 }
 
@@ -68,31 +68,33 @@ float *BrainFart::feedForward(std::vector<float> input)
         return nullptr;
     }
 
-    layers[0] = new float*[1];
-    layers[0][0] = new float[input.size()];
+    layers[0] = new float*[dimensions[0]];
 
     for(int i = 0; i < input.size(); i++)
     {
-        layers[0][0][i] = input[i];
+        layers[0][i] = new float[1];
+        layers[0][i][0] = input[i];
     }
 
     for(int i = 1; i < layerNumber; i++)
     {
-        layers[i] = MatrixMath::multiply(1, dimensions[i-1], dimensions[i-1], dimensions[i], layers[i-1], weights[i-1]);
+        layers[i] = MatrixMath::multiply(dimensions[i], dimensions[i-1], dimensions[i-1], 1, weights[i-1], layers[i-1]);
 
 
+        //Hidden Layers
         if(i != layerNumber-1)
         {
             for(int j = 0; j < dimensions[i]; j++)
             {
-                layers[i][0][j] = sig(layers[i][0][j]);
+                layers[i][j][0] = sig(layers[i][j][0]);
             }
         }
+        //Output Layer
         else
         {
             for(int j = 0; j < dimensions[i]; j++)
             {
-                layers[i][0][j] = sig(layers[i][0][j]);
+                layers[i][j][0] = reLU(layers[i][j][0]);
             }
         }
     }
@@ -101,7 +103,7 @@ float *BrainFart::feedForward(std::vector<float> input)
 
     for(int i = 0; i < dimensions[layerNumber-1]; i++)
     {
-        returnValue[i] = layers[layerNumber-1][0][i];
+        returnValue[i] = layers[layerNumber-1][i][0];
     }
 
     return returnValue;
@@ -111,12 +113,15 @@ void BrainFart::freeLayers()
 {
     for(int i = 0; i < layerNumber; i++)
     {
-        delete layers[i][0];
+        for(int j = 0; j < dimensions[i]; j++)
+        {
+            delete layers[i][j];
+        }
         delete layers[i];
     }
 }
 
-void BrainFart::backwardPropagation(std::vector<float> actual, std::vector<float> guess)
+void BrainFart::backwardPropagation(const std::vector<float>& actual, const std::vector<float>& guess)
 {
 
     int dimension = layerNumber - 1;
@@ -124,41 +129,45 @@ void BrainFart::backwardPropagation(std::vector<float> actual, std::vector<float
     float*** errors = new float**[dimension];
     float*** deltaWeights = new float**[dimension];
 
-    float** actualMatrix = MatrixMath::toMatrix(1, actual.size(), actual);
-    float** guessMatrix = MatrixMath::toMatrix(1, guess.size(), guess);
+    float** actualMatrix = MatrixMath::toMatrix(actual.size(), 1, actual);
+    float** guessMatrix = MatrixMath::toMatrix(guess.size(), 1, guess);
 
     //Errors per layer
     for(int i = dimension-1; i >= 0; i--)
     {
         if(i == dimension - 1)
         {
-            errors[i] = MatrixMath::subtract(1, guess.size(), actualMatrix, guessMatrix);
+            errors[i] = MatrixMath::subtract(guess.size(), 1, actualMatrix, guessMatrix);
         }
         else
         {
-            float** weightT = MatrixMath::transpose(weights[i+1], dimensions[i+1], dimensions[i+2]);
-            errors[i] = MatrixMath::multiply(1, dimensions[i+2], dimensions[i+2], dimensions[i+1], errors[i+1], weightT);
+            float** weightT = MatrixMath::transpose(weights[i+1], dimensions[i+2], dimensions[i+1]);
+            errors[i] = MatrixMath::multiply(dimensions[i+1], dimensions[i+2], dimensions[i+2], 1, weightT, errors[i+1]);
+
+            MatrixMath::freeMatrix(dimensions[i+1], dimensions[i+2], weightT);
         }
     }
 
     //Gradient and Weight
     for(int i = 0; i < dimension; i++)
     {
-        float** gradient = MatrixMath::dsigmoid(1, dimensions[i+1], layers[i+1]);
-        MatrixMath::Hadamard(1, dimensions[i+1], gradient, errors[i]);
-        float** gradientT = MatrixMath::transpose(gradient, 1, dimensions[i+1]);
-        deltaWeights[i] = MatrixMath::multiply(dimensions[i+1], 1, 1, dimensions[i], gradientT, layers[i]);
-        deltaWeights[i] = MatrixMath::transpose(deltaWeights[i], dimensions[i+1], dimensions[i]);
-        //MatrixMath::print(deltaWeights[i], dimensions[i], dimensions[i+1]);
+        float** gradient = MatrixMath::dsigmoid(dimensions[i+1], 1, layers[i+1]);
+        MatrixMath::Hadamard(dimensions[i+1], 1, gradient, errors[i]);
+
+        float** layerT = MatrixMath::transpose(layers[i], dimensions[i], 1);
+
+        deltaWeights[i] = MatrixMath::multiply(dimensions[i+1], 1, 1, dimensions[i], gradient, layerT);
+
+        MatrixMath::freeMatrix(dimensions[i+1], 1, gradient);
+        MatrixMath::freeMatrix(1, dimensions[i], layerT);
+
     }
 
 
     for(int i = 0; i < dimension; i++)
     {
-        MatrixMath::sum(dimensions[i], dimensions[i+1], weights[i], deltaWeights[i]);
-
-        MatrixMath::print(deltaWeights[i], dimensions[i], dimensions[i+1]);
-        MatrixMath::print(weights[i], dimensions[i], dimensions[i+1]);
+        MatrixMath::sum(dimensions[i+1], dimensions[i], weights[i], deltaWeights[i]);
+        MatrixMath::freeMatrix(dimensions[i+1], dimensions[i], deltaWeights[i]);
     }
 }
 
@@ -223,7 +232,7 @@ void BrainFart::freeBrain()
 
     for(int i = 0; i < layerNumber-1; i++)
     {
-        for(int j = 0; j < dimensions[i]; j++)
+        for(int j = 0; j < dimensions[i+1]; j++)
         {
             delete weights[i][j];
         }
