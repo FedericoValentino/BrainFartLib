@@ -4,6 +4,11 @@
 #include<time.h>
 #include<stdlib.h>
 
+/*
+ * This is an example for a neural network capable of approximating the XOR function
+ */
+
+
 
 void printArr(std::vector<float> arr, int size)
 {
@@ -16,7 +21,7 @@ void printArr(std::vector<float> arr, int size)
 int main()
 {
     srand(time(NULL));
-    BrainFart* brain1 = new BrainFart({2, 3, 1});
+    BrainFart* brain1 = new BrainFart({2, 3, 1}, 0.06);
 
     for(int i = 0; i < 100000; i++)
     {

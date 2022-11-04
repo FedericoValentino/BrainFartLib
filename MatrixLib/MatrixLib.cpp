@@ -189,3 +189,14 @@ float **MatrixMath::unitaryMatrix(int r, int c) {
     return copy;
 }
 
+void MatrixMath::scalarMultiply(int r, int c, float scalar, float **m1) {
+
+    for(int i = 0; i < r; i++)
+    {
+        for(int j = 0; j < c; j++)
+        {
+            m1[i][j] = m1[i][j] * scalar;
+        }
+    }
+}
+

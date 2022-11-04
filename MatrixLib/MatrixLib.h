@@ -17,6 +17,8 @@ public:
 
     static void Hadamard(int r, int c, float** m1, float** m2);
 
+    static void scalarMultiply(int r, int c, float scalar, float** m1);
+
     static void freeMatrix(int r, int c, float** m1);
 
     static float** dsigmoid(int r, int c, float** m1);

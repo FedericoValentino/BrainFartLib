@@ -1,5 +1,3 @@
-#include <cstdlib>
-#include <ctime>
 #include <cstdio>
 #include <random>
 #include "BrainFart.h"
@@ -17,8 +15,10 @@ float BrainFart::sig(float x) {
     return 1/(1 + std::exp(-x));
 }
 
-BrainFart::BrainFart(std::vector<int> layerSizes)
+BrainFart::BrainFart(std::vector<int> layerSizes, float LR)
 {
+    learningRate = LR;
+
     dimensions = layerSizes;
 
     layerNumber = dimensions.size();
@@ -140,8 +140,8 @@ void BrainFart::backwardPropagation(const std::vector<float>& actual, const std:
 
     int dimension = layerNumber - 1;
 
-    float*** errors = new float**[dimension];
-    float*** deltaWeights = new float**[dimension];
+    auto*** errors = new float**[dimension];
+    auto*** deltaWeights = new float**[dimension];
 
     float** actualMatrix = MatrixMath::toMatrix(actual.size(), 1, actual);
     float** guessMatrix = MatrixMath::toMatrix(guess.size(), 1, guess);
@@ -180,6 +180,8 @@ void BrainFart::backwardPropagation(const std::vector<float>& actual, const std:
 
         MatrixMath::Hadamard(dimensions[i+1], 1, gradient, errors[i]);
 
+        MatrixMath::scalarMultiply(dimensions[i+1], 1, learningRate, gradient);
+
         float** layerT = MatrixMath::transpose(layers[i], dimensions[i], 1);
 
         deltaWeights[i] = MatrixMath::multiply(dimensions[i+1], 1, 1, dimensions[i], gradient, layerT);
@@ -192,12 +194,14 @@ void BrainFart::backwardPropagation(const std::vector<float>& actual, const std:
 
     for(int i = 0; i < dimension; i++)
     {
+        //update Weights
         MatrixMath::sum(dimensions[i+1], dimensions[i], weights[i], deltaWeights[i]);
-        float** temp = MatrixMath::unitaryMatrix(dimensions[i+1], 1);
-        MatrixMath::Hadamard(dimensions[i+1], 1, errors[i], temp);
+
+        //update Biases
+        MatrixMath::scalarMultiply(dimensions[i+1], 1, learningRate, errors[i]);
         MatrixMath::sum(dimensions[i+1], 1, biases[i+1], errors[i]);
+
         MatrixMath::freeMatrix(dimensions[i+1], dimensions[i], deltaWeights[i]);
-        MatrixMath::freeMatrix(dimensions[i+1], 1, temp);
     }
 
     //printBrain();
@@ -227,7 +231,7 @@ void BrainFart::mutate()
 }
 
 BrainFart *BrainFart::reproduce(BrainFart *father, BrainFart *mother) {
-    BrainFart* son = new BrainFart(father->dimensions);
+    auto* son = new BrainFart(father->dimensions, father->learningRate);
 
     std::random_device rd{};
     std::mt19937 gen{rd()};
@@ -274,7 +278,7 @@ void BrainFart::freeBrain()
 }
 
 BrainFart *BrainFart::cloneBrain(BrainFart *copy) {
-    BrainFart* son = new BrainFart(copy->dimensions);
+    auto* son = new BrainFart(copy->dimensions, copy->learningRate);
 
 
     for(int i = 0; i < copy->layerNumber-1; i++)
@@ -302,7 +306,7 @@ void BrainFart::printBrain()
     }
 }
 
-void BrainFart::train(TrainingStruct input)
+void BrainFart::train(const TrainingStruct& input)
 {
     std::vector<float> output = this->feedForward(input.Data);
 
