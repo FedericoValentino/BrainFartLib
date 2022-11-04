@@ -5,7 +5,7 @@
 #include<stdlib.h>
 
 
-void printArr(float* arr, int size)
+void printArr(std::vector<float> arr, int size)
 {
     for (int i = 0; i < size; i++) {
         printf("%f ", arr[i]);
@@ -21,37 +21,28 @@ int main()
     for(int i = 0; i < 100000; i++)
     {
         int caso = rand()%4;
-        std::vector<float> trainingData;
-        std::vector<float> answer;
+        TrainingStruct examples;
         switch(caso)
         {
             case 0:
-                trainingData = {1, 1};
-                answer = {0};
+                examples.Data = {1, 1};
+                examples.answer = {0};
                 break;
             case 1:
-                trainingData = {0, 1};
-                answer = {1};
+                examples.Data = {0, 0};
+                examples.answer = {0};
                 break;
             case 2:
-                trainingData = {1, 0};
-                answer = {1};
+                examples.Data = {1, 0};
+                examples.answer = {1};
                 break;
             case 3:
-                trainingData = {0, 0};
-                answer = {0};
+                examples.Data = {0, 1};
+                examples.answer = {1};
                 break;
         }
 
-        float* output = brain1->feedForward(trainingData);
-
-        std::vector<float> guess;
-
-        guess.push_back(output[0]);
-
-        brain1->backwardPropagation(answer, guess);
-
-        brain1->freeLayers();
+        brain1->train(examples);
     }
 
 
@@ -59,9 +50,6 @@ int main()
     printArr(brain1->feedForward({1, 0}), 1);
     printArr(brain1->feedForward({0, 1}), 1);
     printArr(brain1->feedForward({0, 0}), 1);
-
-
-
 
     brain1->freeLayers();
 

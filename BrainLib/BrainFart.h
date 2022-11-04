@@ -3,13 +3,23 @@
 
 //TODO Backward Propagation
 
+struct trainingStruct
+{
+    std::vector<float> Data;
+    std::vector<float> answer;
+};
+
+typedef struct trainingStruct TrainingStruct;
+
 class BrainFart{
 public:
     BrainFart(std::vector<int> layerSizes);
 
-    float* feedForward(std::vector<float> input);
+    std::vector<float> feedForward(std::vector<float> input);
 
     void backwardPropagation(const std::vector<float>& actual, const std::vector<float>& guess);
+
+    void train(TrainingStruct input);
 
     void printBrain();
 

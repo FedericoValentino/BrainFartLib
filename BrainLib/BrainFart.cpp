@@ -71,12 +71,13 @@ void BrainFart::initializeWeightsAndBiases()
 
 }
 
-float *BrainFart::feedForward(std::vector<float> input)
+std::vector<float> BrainFart::feedForward(std::vector<float> input)
 {
     if(input.size() != dimensions[0])
     {
         printf("Input is not correct size!\n");
-        return nullptr;
+        std::vector<float> NULLANSWER;
+        return NULLANSWER;
     }
 
     layers[0] = new float*[dimensions[0]];
@@ -112,11 +113,11 @@ float *BrainFart::feedForward(std::vector<float> input)
         }
     }
 
-    float* returnValue = new float[dimensions[layerNumber-1]];
+    std::vector<float> returnValue;
 
     for(int i = 0; i < dimensions[layerNumber-1]; i++)
     {
-        returnValue[i] = layers[layerNumber-1][i][0];
+        returnValue.push_back(layers[layerNumber-1][i][0]);
     }
 
     return returnValue;
@@ -192,9 +193,11 @@ void BrainFart::backwardPropagation(const std::vector<float>& actual, const std:
     for(int i = 0; i < dimension; i++)
     {
         MatrixMath::sum(dimensions[i+1], dimensions[i], weights[i], deltaWeights[i]);
-        MatrixMath::Hadamard(dimensions[i+1], 1, errors[i], MatrixMath::unitaryMatrix(dimensions[i+1], 1));
+        float** temp = MatrixMath::unitaryMatrix(dimensions[i+1], 1);
+        MatrixMath::Hadamard(dimensions[i+1], 1, errors[i], temp);
         MatrixMath::sum(dimensions[i+1], 1, biases[i+1], errors[i]);
         MatrixMath::freeMatrix(dimensions[i+1], dimensions[i], deltaWeights[i]);
+        MatrixMath::freeMatrix(dimensions[i+1], 1, temp);
     }
 
     //printBrain();
@@ -297,6 +300,15 @@ void BrainFart::printBrain()
     {
         MatrixMath::print(weights[i], dimensions[i+1], dimensions[i]);
     }
+}
+
+void BrainFart::train(TrainingStruct input)
+{
+    std::vector<float> output = this->feedForward(input.Data);
+
+    this->backwardPropagation(input.answer, output);
+
+    this->freeLayers();
 }
 
 
