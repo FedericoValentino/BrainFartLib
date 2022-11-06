@@ -13,7 +13,7 @@ To feed it data we use the feedForward function:
 
      MyBrain->feedForward({1, 1});  
 
-This returns a float array with what our network thinks is the answer.  
+This returns a float vector with what our network thinks is the answer.  
 If we want to train the network we can use the smart and easy backPropagation function:
 
 
