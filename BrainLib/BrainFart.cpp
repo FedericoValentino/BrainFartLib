@@ -152,6 +152,8 @@ void BrainFart::backwardPropagation(const std::vector<float>& actual, const std:
         if(i == dimension - 1)
         {
             errors[i] = MatrixMath::subtract(guess.size(), 1, actualMatrix, guessMatrix);
+            MatrixMath::freeMatrix(actual.size(), 1, actualMatrix);
+            MatrixMath::freeMatrix(guess.size(), 1, guessMatrix);
         }
         else
         {
@@ -202,8 +204,11 @@ void BrainFart::backwardPropagation(const std::vector<float>& actual, const std:
         MatrixMath::sum(dimensions[i+1], 1, biases[i+1], errors[i]);
 
         MatrixMath::freeMatrix(dimensions[i+1], dimensions[i], deltaWeights[i]);
+        MatrixMath::freeMatrix(dimensions[i+1], 1, errors[i]);
     }
 
+    delete errors;
+    delete deltaWeights;
     //printBrain();
 }
 
@@ -275,6 +280,16 @@ void BrainFart::freeBrain()
         delete weights[i];
     }
     delete weights;
+
+    for(int i = 0; i < layerNumber; i++)
+    {
+        for(int j = 0; j < dimensions[i]; j++)
+        {
+            delete biases[i][j];
+        }
+        delete biases[i];
+    }
+    delete biases;
 }
 
 BrainFart *BrainFart::cloneBrain(BrainFart *copy) {

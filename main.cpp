@@ -52,12 +52,16 @@ int main()
 
 
     printArr(brain1->feedForward({1, 1}), 1);
+    brain1->freeLayers();
     printArr(brain1->feedForward({1, 0}), 1);
+    brain1->freeLayers();
     printArr(brain1->feedForward({0, 1}), 1);
+    brain1->freeLayers();
     printArr(brain1->feedForward({0, 0}), 1);
-
     brain1->freeLayers();
 
     brain1->freeBrain();
+
+    delete brain1;
     return 0;
 }
