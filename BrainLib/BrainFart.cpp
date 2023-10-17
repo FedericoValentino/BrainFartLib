@@ -45,7 +45,6 @@ void BrainFart::initializeWeightsAndBiases()
 {
     std::random_device rd;
     std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(-1.0, 1.0);
     for(int i = 0; i < layerNumber - 1; i++)
     {
         int r = dimensions[i+1];
@@ -54,7 +53,8 @@ void BrainFart::initializeWeightsAndBiases()
         {
             for(int k = 0; k < c; k++)
             {
-                weights[i][j][k] = dist(mt);
+                std::normal_distribution<double> distribution{0,static_cast<float>((2/((dimensions.at(i)+dimensions.at(i+1))))^2)};
+                weights[i][j][k] = distribution(mt);
             }
         }
     }
@@ -64,8 +64,9 @@ void BrainFart::initializeWeightsAndBiases()
         biases[i] = new float*[dimensions[i]];
         for(int j = 0; j < dimensions[i]; j++)
         {
+            std::normal_distribution<double> distribution{0,static_cast<float>((2/((dimensions.at(i)+dimensions.at(i+1))))^2)};
             biases[i][j] = new float[1];
-            biases[i][j][0] = dist(mt);
+            biases[i][j][0] = distribution(mt);
         }
     }
 
